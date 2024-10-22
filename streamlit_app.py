@@ -25,8 +25,6 @@ if st.button('Submit'):
             s3.upload_fileobj(uploaded_file, S3_BUCKET_NAME, uploaded_file.name)
             st.success(f"File '{uploaded_file.name}' uploaded successfully to S3 bucket '{S3_BUCKET_NAME}'.")
         except NoCredentialsError:
-            st.error("AWS credentials not found or invalid.")
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+            st.error("AWS credentials not found. Please configure them properly.")
     else:
         st.warning("No file uploaded. Please upload a file first.")
