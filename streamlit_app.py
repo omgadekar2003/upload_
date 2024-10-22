@@ -1,21 +1,30 @@
 import streamlit as st
-import pandas as pd
-from io import StringIO
+import boto3
+from botocore.exceptions import NoCredentialsError
 
+# Fetch credentials securely from Streamlit secrets
+AWS_ACCESS_KEY = st.secrets["AWS_ACCESS_KEY"]
+AWS_SECRET_KEY = st.secrets["AWS_SECRET_KEY"]
+S3_BUCKET_NAME = st.secrets["S3_BUCKET_NAME"]
+
+# Initialize S3 client
+s3 = boto3.client('s3',
+                  aws_access_key_id=AWS_ACCESS_KEY,
+                  aws_secret_access_key=AWS_SECRET_KEY)
+
+st.title('File Upload to S3')
+
+# File uploader widget
 uploaded_file = st.file_uploader("Choose a file")
-if uploaded_file is not None:
-    # To read file as bytes:
-    bytes_data = uploaded_file.getvalue()
-    st.write(bytes_data)
 
-    # To convert to a string based IO:
-    stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-    st.write(stringio)
-
-    # To read file as string:
-    string_data = stringio.read()
-    st.write(string_data)
-
-    # Can be used wherever a "file-like" object is accepted:
-    dataframe = pd.read_csv(uploaded_file)
-    st.write(dataframe)
+# Submit button
+if st.button('Submit'):
+    if uploaded_file is not None:
+        try:
+            # Upload the file to S3
+            s3.upload_fileobj(uploaded_file, S3_BUCKET_NAME, uploaded_file.name)
+            st.success(f"File '{uploaded_file.name}' uploaded successfully to S3 bucket '{S3_BUCKET_NAME}'.")
+        except NoCredentialsError:
+            st.error("AWS credentials not found or invalid.")
+    else:
+        st.warning("No file uploaded. Please upload a file first.")
