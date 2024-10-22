@@ -2,7 +2,7 @@ import streamlit as st
 import boto3
 from botocore.exceptions import NoCredentialsError
 
-# Fetch credentials securely from Streamlit secrets
+# Access AWS credentials from Streamlit secrets
 AWS_ACCESS_KEY = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_KEY = st.secrets["AWS_SECRET_KEY"]
 S3_BUCKET_NAME = st.secrets["S3_BUCKET_NAME"]
@@ -26,5 +26,7 @@ if st.button('Submit'):
             st.success(f"File '{uploaded_file.name}' uploaded successfully to S3 bucket '{S3_BUCKET_NAME}'.")
         except NoCredentialsError:
             st.error("AWS credentials not found or invalid.")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
     else:
         st.warning("No file uploaded. Please upload a file first.")
