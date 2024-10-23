@@ -2,6 +2,12 @@ import streamlit as st
 import boto3
 from botocore.exceptions import NoCredentialsError
 
+#--
+
+#from snowflake.snowpark.context import get_active_session
+from snowflake.snowpark.functions import col
+import pandas as pd
+#--
 # Access AWS credentials from Streamlit secrets
 AWS_ACCESS_KEY = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_KEY = st.secrets["AWS_SECRET_KEY"]
@@ -59,9 +65,71 @@ subject_option = st.selectbox(
 )
 
 st.write("You selected Subject is:", subject_option)
+#-----
+#-----
+
+cnx = st.connection("snowflake")
+session = cnx.session()
+
+# Select ROLL_NO, NAME_OF_STUDENT, and CLASS columns from the table
+my_dataframe = session.table("DIEMS_CA.PUBLIC.pdf_submt").select(col('ROLL_NO'), col('NAME_OF_STUDENT'), col('CLASS'))
+
+# Extract roll numbers, corresponding student names, and classes into a dictionary for easy lookup
+roll_number_dict = {row['ROLL_NO']: (row['NAME_OF_STUDENT'], row['CLASS']) for row in my_dataframe.collect()}
+
+# Create a list of roll numbers for the selectbox options
+roll_numbers = list(roll_number_dict.keys())
+
+# Insert a placeholder at the beginning of the list
+roll_numbers.insert(0, "Select Roll Number...")
+
+# Student roll number selection drop-down with placeholder
+roll_option = st.selectbox(
+    "Select Student's Rollno",
+    options=roll_numbers,  # Pass the list of roll numbers with placeholder
+    index=0  # Set the index to 0 to show the placeholder as the default
+)
+
+# Initialize student_name and class_name as None
+student_name = None
+class_name = None
+
+# Only fetch the student name and class if a valid roll number is selected
+if roll_option != "Select Roll Number...":
+    # Fetch the student's name and class based on the selected roll number
+    student_name, class_name = roll_number_dict.get(roll_option)
+    
+    # Display the selected roll number, student's name, and class
+    st.write(f"Selected Roll Number: {roll_option}")
+    st.write(f"Student Name: {student_name}")
+    st.write(f"Class: {class_name}")
+
+# Assuming roll_option, subject_option, student_name, and class_name are selected
+if student_name and class_name:
+    # Use an f-string for formatting the SQL query, adding Student_Name and Class to the query
+    my_insert_stmt = f"""
+    INSERT INTO DIEMS_CA.PUBLIC.pdf_submt_complete
+    (rollno, subject, Student_Name, Class)
+    VALUES ('{roll_option}', '{subject_option}', '{student_name}', '{class_name}')
+    """
+
+    
+    # Button to submit the form
+    time_to_insert = st.button("Submit Assignment")
+
+    if time_to_insert:
+        # Execute the SQL query
+        session.sql(my_insert_stmt).collect()
+        
+        # Display success message
+        st.success(f'Your Assignment is submitted, {student_name}!', icon="✅")
 
 
 
+
+
+#--------
+#---------
 # File upload section
 st.title('Submit you assignment here')
 
@@ -74,7 +142,7 @@ if st.button('Submit'):
         try:
             # Upload the file to S3
             s3.upload_fileobj(uploaded_file, S3_BUCKET_NAME, uploaded_file.name)
-            st.success(f"File '{uploaded_file.name}' uploaded successfully to S3 bucket '{S3_BUCKET_NAME}'.")
+            st.success(f"File '{uploaded_file.name}' uploaded successfully.")
         except NoCredentialsError:
             st.error("AWS credentials not found. Please configure them properly.")
     else:
