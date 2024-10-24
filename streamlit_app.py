@@ -277,7 +277,7 @@ if st.button('Submit'):
             conn.commit()
             cursor.close()
 
-            st.success(f"File '{uploaded_file.name}' uploaded successfully to '{subject_folder}' folder in S3 bucket '{S3_BUCKET_NAME}' and submission status updated.")
+            st.success(f"File '{uploaded_file.name}' uploaded successfully and submission status updated.")
 
         except NoCredentialsError:
             st.error("AWS credentials not found. Please configure them properly.")
