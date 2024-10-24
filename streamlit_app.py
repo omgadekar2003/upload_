@@ -155,25 +155,24 @@
 
 
 
-
 import streamlit as st
 import boto3
 import snowflake.connector
 from botocore.exceptions import NoCredentialsError
 
-# Access AWS credentials from Streamlit secrets
-AWS_ACCESS_KEY = st.secrets["connections.snowflake"]["AWS_ACCESS_KEY"]
-AWS_SECRET_KEY = st.secrets["connections.snowflake"]["AWS_SECRET_KEY"]
-S3_BUCKET_NAME = st.secrets["connections.snowflake"]["S3_BUCKET_NAME"]
+# Access AWS credentials from Streamlit secrets (directly from root level in secrets)
+AWS_ACCESS_KEY = st.secrets["AWS_ACCESS_KEY"]
+AWS_SECRET_KEY = st.secrets["AWS_SECRET_KEY"]
+S3_BUCKET_NAME = st.secrets["S3_BUCKET_NAME"]
 
-# Access Snowflake credentials from Streamlit secrets
-SNOWFLAKE_ACCOUNT = st.secrets["connections.snowflake"]["account"]
-SNOWFLAKE_USER = st.secrets["connections.snowflake"]["user"]
-SNOWFLAKE_PASSWORD = st.secrets["connections.snowflake"]["password"]
-SNOWFLAKE_ROLE = st.secrets["connections.snowflake"]["role"]
-SNOWFLAKE_WAREHOUSE = st.secrets["connections.snowflake"]["warehouse"]
-SNOWFLAKE_DATABASE = st.secrets["connections.snowflake"]["database"]
-SNOWFLAKE_SCHEMA = st.secrets["connections.snowflake"]["schema"]
+# Access Snowflake credentials from Streamlit secrets (directly from root level in secrets)
+SNOWFLAKE_ACCOUNT = st.secrets["account"]
+SNOWFLAKE_USER = st.secrets["user"]
+SNOWFLAKE_PASSWORD = st.secrets["password"]
+SNOWFLAKE_ROLE = st.secrets["role"]
+SNOWFLAKE_WAREHOUSE = st.secrets["warehouse"]
+SNOWFLAKE_DATABASE = st.secrets["database"]
+SNOWFLAKE_SCHEMA = st.secrets["schema"]
 
 # Initialize S3 client
 s3 = boto3.client('s3',
