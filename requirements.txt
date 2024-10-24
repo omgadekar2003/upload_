@@ -8,3 +8,4 @@
 streamlit
 boto3
 snowflake-connector-python
+
