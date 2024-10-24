@@ -154,18 +154,17 @@
 
 
 
-
 import streamlit as st
 import boto3
 import snowflake.connector
 from botocore.exceptions import NoCredentialsError
 
-# Access AWS credentials from Streamlit secrets (directly from root level in secrets)
+# Access AWS credentials from Streamlit secrets
 AWS_ACCESS_KEY = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_KEY = st.secrets["AWS_SECRET_KEY"]
 S3_BUCKET_NAME = st.secrets["S3_BUCKET_NAME"]
 
-# Access Snowflake credentials from Streamlit secrets (directly from root level in secrets)
+# Access Snowflake credentials from Streamlit secrets
 SNOWFLAKE_ACCOUNT = st.secrets["account"]
 SNOWFLAKE_USER = st.secrets["user"]
 SNOWFLAKE_PASSWORD = st.secrets["password"]
@@ -238,12 +237,10 @@ subject_option = st.selectbox(
     placeholder="Select Subject..."
 )
 
-st.write("You selected Subject is:", subject_option)
-
 # Input fields for student information
-rollno = st.text_input("Enter Roll Number")
-student_name = st.text_input("Enter Student Name")
-class_name = st.text_input("Enter Class")
+rollno = st.text_input("Enter Roll Number", "")
+student_name = st.text_input("Enter Student Name", "")
+class_name = st.text_input("Enter Class", "")
 
 # File upload section
 st.title('Submit your assignment here')
@@ -253,7 +250,7 @@ uploaded_file = st.file_uploader("Choose a file")
 
 # Submit button
 if st.button('Submit'):
-    if uploaded_file is not None:
+    if uploaded_file is not None and rollno and student_name and class_name:
         try:
             # Generate file path with subject folder
             subject_folder = subject_option.replace(" ", "_")  # Replace spaces with underscores
@@ -277,11 +274,18 @@ if st.button('Submit'):
             conn.commit()
             cursor.close()
 
-            st.success(f"File '{uploaded_file.name}' uploaded successfully and submission status updated.")
+            st.success(f"File '{uploaded_file.name}' uploaded successfully to '{subject_folder}' folder in S3 bucket '{S3_BUCKET_NAME}' and submission status updated.")
+
+            # Clear input fields after submission
+            rollno = ""
+            student_name = ""
+            class_name = ""
+            uploaded_file = None
 
         except NoCredentialsError:
             st.error("AWS credentials not found. Please configure them properly.")
         except Exception as e:
             st.error(f"An error occurred: {e}")
     else:
-        st.warning("No file uploaded. Please upload a file first.")
+        st.warning("Please fill in all fields and upload a file before submitting.")
+
